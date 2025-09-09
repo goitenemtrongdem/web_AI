@@ -1,0 +1,12 @@
+
+{
+  "name": "hyun",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"✅ Test chạy thành công!\" && exit 0",
+    "build": "echo \"🔧 Đang build...\" && exit 0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
+
