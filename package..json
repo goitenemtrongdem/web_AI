@@ -1,0 +1,19 @@
+{
+    "name": "hyun-demo",
+    "version": "1.0.0",
+    "description": "Demo project CI/CD với Node.js",
+    "main": "index.js",
+    "scripts": {
+      "build": "echo \"🔧 Đang build...\" && exit 0",
+      "test": "echo \"✅ Test chạy thành công!\" && exit 0"
+    },
+    "author": "Bạn",
+    "license": "MIT",
+    "dependencies": {
+      // nếu bạn có cài gói nào thì thêm vào đây
+    },
+    "devDependencies": {
+      // nếu có gói dev (như jest, eslint) thì thêm vào đây
+    }
+  }
+  
