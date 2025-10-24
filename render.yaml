@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: fastapi-turbine
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DATABASE_URL
+        value: postgresql://postgres_ka4t_user:C13EqgSQwdznhCr3QnmA5kjyJUFNMWl7@dpg-d2o6oa7diees73f3d4m0-a.singapore-postgres.render.com/postgres_ka4t

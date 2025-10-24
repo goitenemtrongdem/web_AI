@@ -1,0 +1,105 @@
+name: FastAPI CI/CD
+
+on:
+  push:
+    branches: [Develop, PrePro, master]
+  pull_request:
+    branches: [Develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      # - name: Lint with flake8
+      #   run: |
+      #     pip install flake8
+      #     flake8 app tests
+      - name: Setup environment variables
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+          echo "ENV_MODE=testing" >> $GITHUB_ENV
+          echo "ENV_MODE=testing" >> $GITHUB_ENV
+      - name: Run tests
+        run: |
+          pip install pytest
+          pytest
+      
+
+  build-and-push:
+    name: Build and Push Docker image
+    needs: test
+    # Chỉ chạy trên nhánh master hoặc PrePro
+
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/PrePro' || github.ref == 'refs/heads/Develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/blade-turbine
+          tags: |
+            type=ref,event=branch
+            type=sha,format=short
+            latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Windows Server (Self-hosted Runner)
+    needs: build-and-push
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/PrePro' || github.ref == 'refs/heads/Develop'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull latest Docker images
+        run: |
+          cd "D:/tailieu canh tuabine gio/project/blade-turbine"
+          Write-Host "Pull latest Docker images..."
+          docker compose pull
+        shell: powershell
+
+      - name: Recreate and start containers
+        run: |
+          cd "D:/tailieu canh tuabine gio/project/blade-turbine"
+          Write-Host "Recreate and start containers..."
+          docker compose up -d --force-recreate
+        shell: powershell
+
+      - name: Clean up Docker
+        run: |
+          Write-Host "Cleaning up unused Docker data..."
+          docker system prune -f
+          Write-Host "Deployment completed successfully!"
+        shell: powershell
